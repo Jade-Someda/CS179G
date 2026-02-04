@@ -9,7 +9,7 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 
-crime_df = spark.read.option("header", True).csv("/Users/nehagutlapalli/Downloads/Chicago_Crimes (1).csv")
+crime_df = spark.read.option("header", True).csv("/home/cs179g/features.csv.gz")
 #crime_df.printSchema()
 #crime_df.show(5)
 
@@ -58,7 +58,7 @@ crime_df = crime_df.drop(
 )
 crime_df.write \
      .mode("overwrite") \
-    .parquet("/Users/nehagutlapalli/Downloads/clean_chicago_crime")
+    .parquet("/home/cs179g/project/CS179G/clean_chicago_crime")
 
 clean_rows = crime_df.count()
 clean_cols = len(crime_df.columns)
@@ -71,7 +71,8 @@ print("Cleaning runtime:", end-start, "seconds")
 
 
 crime_df.describe(["x","y"]).show()
-crime_df.groupBy("arrest").count.show()
-crime_df.groupBy("domestic").count.show()
+crime_df.groupBy("arrest").count().show()
+crime_df.groupBy("domestic").count().show()
 crime_df.select("primary_type").distinct().count()
 spark.stop()
+
