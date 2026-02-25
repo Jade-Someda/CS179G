@@ -163,7 +163,19 @@ def main():
 
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
-   
+     # 1)filter out rows with invalid columns 
+    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
+
+    # 2) group data into buckets: public transit and commercial areas
+    robberies_categorized = robberies.withColumn(
+    "location_type",
+    when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
+    .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
+    .otherwise("Other"))
+
+    # 3) make comparison
+    robbery_by_location = robberies_categorized.groupBy("location_type").agg(count("*").alias("robbery_count"))
+
    
 
    
