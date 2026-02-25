@@ -127,7 +127,33 @@ def main():
     write_to_mysql(community_area_crimes, "community_area_crimes", spark)
 
     # Downtown areas have higher rates of theft and robbery than residential areas.
-    
+    df_area = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
+
+    downtown_ids = [32, 8, 33, 28]
+
+    df_area = df_area.withColumn(
+        "area_type",
+        when(col("community_area").isin(downtown_ids), "Downtown")
+        .otherwise("Residential")
+    )
+
+    area_totals = (
+        df_area.groupBy("area_type")
+        .agg(count("*").alias("total_crimes"))
+    )
+
+    area_tr = (
+        df_area.filter(col("primary_type").isin("THEFT", "ROBBERY"))
+        .groupBy("area_type")
+        .agg(count("*").alias("tr_crimes"))
+    )
+
+    downtown_vs_residential = (
+        area_tr.join(area_totals, "area_type")
+        .withColumn("rate", col("tr_crimes") / col("total_crimes"))
+    )
+
+    write_to_mysql(downtown_vs_residential, "downtown_vs_residential_theft_robbery", spark)
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
     df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
