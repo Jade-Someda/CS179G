@@ -18,7 +18,6 @@ def run_experiment(num_workers, data_fraction, experiment_name):
     
     start_time = time.time()
     
-    # Configure Spark with specific number of workers
     spark = SparkSession.builder \
         .appName(f"Experiment_{experiment_name}") \
         .config("spark.executor.instances", str(num_workers)) \
@@ -26,31 +25,25 @@ def run_experiment(num_workers, data_fraction, experiment_name):
         .config("spark.executor.memory", "2g") \
         .getOrCreate()
     
-    # Read data
-    df = spark.read.parquet(PARQUET_PATH)
+        df = spark.read.parquet(PARQUET_PATH)
     
-    # Sample data based on fraction
     if data_fraction < 1.0:
         df = df.sample(fraction=data_fraction, seed=42)
     
-    # Cache the dataframe for consistent timing
     df.cache()
-    record_count = df.count()  # Force caching
+    record_count = df.count() 
     
     print(f"Processing {record_count:,} records...")
     
-    # Run a subset of your analyses (pick representative ones)
     analysis_start = time.time()
     
-    # Example: Simple aggregation
     result1 = df.groupBy("primary_type").agg(count("*").alias("total"))
-    result1.count()  # Force execution
+    result1.count()  
     
-    # Example: More complex aggregation
     result2 = df.filter(col("location_description").isNotNull()) \
         .groupBy("location_description", "primary_type") \
         .agg(count("*").alias("total"))
-    result2.count()  # Force execution
+    result2.count()  
     
     analysis_time = time.time() - analysis_start
     total_time = time.time() - start_time
@@ -81,12 +74,10 @@ def save_results(results):
 def plot_results(results):
     """Generate execution time graphs"""
     
-    # Graph 1: Varying workers (fixed data size at 100%)
     print("\n=== DEBUG: Worker Experiments (100% data) ===")
     all_worker_experiments = [r for r in results if r['data_fraction'] == 1.0]
     print(f"Total experiments found: {len(all_worker_experiments)}")
     
-    # Remove duplicates - keep only first occurrence of each num_workers
     seen_workers = set()
     worker_experiments = []
     for r in sorted(all_worker_experiments, key=lambda x: x['num_workers']):
@@ -115,7 +106,6 @@ def plot_results(results):
         print("Saved: workers_vs_time.png")
         plt.close()
     
-    # Graph 2: Varying data size for EACH worker configuration (separate graphs)
     worker_counts = sorted(set(r['num_workers'] for r in results))
     
     for num_workers in worker_counts:
@@ -123,7 +113,6 @@ def plot_results(results):
         all_data_experiments = [r for r in results if r['num_workers'] == num_workers]
         print(f"Total experiments found: {len(all_data_experiments)}")
         
-        # Remove duplicates
         seen_fractions = set()
         data_experiments = []
         for r in sorted(all_data_experiments, key=lambda x: x['data_fraction']):
@@ -131,8 +120,7 @@ def plot_results(results):
                 data_experiments.append(r)
                 seen_fractions.add(r['data_fraction'])
         
-        if len(data_experiments) > 1:  # Only plot if we have multiple data points
-            # Sort by data fraction
+        if len(data_experiments) > 1: 
             data_experiments = sorted(data_experiments, key=lambda x: x['data_fraction'])
             
             fractions = [r['data_fraction'] for r in data_experiments]
@@ -146,14 +134,12 @@ def plot_results(results):
             
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
             
-            # Plot 1: Data fraction vs time
             ax1.plot(fractions, times, marker='s', linewidth=2, markersize=8, color='green')
             ax1.set_xlabel('Data Fraction', fontsize=12)
             ax1.set_ylabel('Execution Time (seconds)', fontsize=12)
             ax1.set_title(f'Execution Time vs Data Size ({num_workers} Workers)', fontsize=14)
             ax1.grid(True, alpha=0.3)
             
-            # Plot 2: Record count vs time
             sorted_indices = sorted(range(len(records)), key=lambda i: records[i])
             sorted_records = [records[i] for i in sorted_indices]
             sorted_times_by_records = [times[i] for i in sorted_indices]
@@ -171,7 +157,6 @@ def plot_results(results):
             print(f"Saved: {filename}")
             plt.close()
     
-    # Graph 3: Combined comparison - all worker counts on same plot
     print("\n=== Creating combined comparison graph ===")
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
@@ -182,7 +167,6 @@ def plot_results(results):
     for idx, num_workers in enumerate(worker_counts):
         all_data_experiments = [r for r in results if r['num_workers'] == num_workers]
         
-        # Remove duplicates
         seen_fractions = set()
         data_experiments = []
         for r in sorted(all_data_experiments, key=lambda x: x['data_fraction']):
@@ -197,7 +181,6 @@ def plot_results(results):
             times = [r['analysis_time'] for r in data_experiments]
             records = [r['record_count'] for r in data_experiments]
             
-            # Plot 1: Data fraction vs time
             ax1.plot(fractions, times, 
                     marker=markers[idx % len(markers)], 
                     linewidth=2, 
@@ -205,7 +188,6 @@ def plot_results(results):
                     color=colors[idx % len(colors)],
                     label=f'{num_workers} worker(s)')
             
-            # Plot 2: Record count vs time
             sorted_indices = sorted(range(len(records)), key=lambda i: records[i])
             sorted_records = [records[i] for i in sorted_indices]
             sorted_times_by_records = [times[i] for i in sorted_indices]
@@ -217,14 +199,12 @@ def plot_results(results):
                     color=colors[idx % len(colors)],
                     label=f'{num_workers} worker(s)')
     
-    # Format plot 1
     ax1.set_xlabel('Data Fraction', fontsize=12)
     ax1.set_ylabel('Execution Time (seconds)', fontsize=12)
     ax1.set_title('Execution Time vs Data Size (All Worker Configurations)', fontsize=14)
     ax1.legend(fontsize=11)
     ax1.grid(True, alpha=0.3)
     
-    # Format plot 2
     ax2.set_xlabel('Number of Records', fontsize=12)
     ax2.set_ylabel('Execution Time (seconds)', fontsize=12)
     ax2.set_title('Execution Time vs Record Count (All Worker Configurations)', fontsize=14)
@@ -237,7 +217,6 @@ def plot_results(results):
     print("Saved: datasize_vs_time_comparison.png")
     plt.close()
     
-    # Print summary
     print("\n=== Plotting Summary ===")
     print(f"Total graphs generated:")
     print(f"  - workers_vs_time.png")
@@ -251,7 +230,6 @@ def plot_results(results):
 def main():
     results = []
     
-    # Run experiments for ALL combinations
     print("\n" + "="*60)
     print("RUNNING ALL EXPERIMENTS")
     print("="*60)
@@ -266,7 +244,6 @@ def main():
             )
             results.append(result)
     
-    # Save and plot results
     save_results(results)
     plot_results(results)
     
