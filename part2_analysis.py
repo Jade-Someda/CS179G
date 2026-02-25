@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 from pyspark.sql.functions import (
-    col, when, hour, month, dayofmonth, count, to_date,
+    col, when, hour, month, dayofmonth, count, to_date, year,
 )
 import time
 from pyspark.sql.window import Window
@@ -26,7 +26,7 @@ def main():
     df = df.withColumn("month", month(col("date")))
     df = df.withColumn("day", dayofmonth(col("date")))
     df = df.withColumn("date_only", to_date(col("date")))
-    df = df.withColumn("year", col("year").cast("int"))
+    df = df.withColumn("year", year(col("date")).cast("int"))
 
     hourly_crimes = df.groupBy("hour").agg(count("*").alias("crime_count")).orderBy("hour")
     write_to_mysql(hourly_crimes, "hourly_crimes", spark)
@@ -69,6 +69,23 @@ def main():
 
     crimes_sport_locations = sport_locations_df.groupby("location_description", "primary_type").agg(count("*").alias("total_crimes")).orderBy("location_description",col("total_crimes").desc())
     write_to_mysql(crimes_sport_locations, "sport_location_crimes", spark)
+    df_location = df.filter(col("location_description").isNotNull() & (col("location_description") != ""))
+
+
+    theft_counts = df_location.filter(col("primary_type") == "THEFT") \
+        .groupBy("location_description") \
+        .agg(count("*").alias("total_thefts")) \
+        .orderBy(col("total_thefts").desc())
+
+
+    total_counts = df_location.groupBy("location_description") \
+        .agg(count("*").alias("total_crimes")) \
+        .orderBy(col("total_crimes").desc())
+
+    theft_vs_total = theft_counts.join(total_counts, on="location_description", how="inner")
+
+
+    write_to_mysql(theft_vs_total, "theft_by_location", spark)
 
 
     holiday_dates = [
@@ -108,6 +125,15 @@ def main():
     df_community = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
     community_area_crimes = df_community.groupBy("community_area").agg(count("*").alias("total_crimes")).orderBy(col("total_crimes").desc())
     write_to_mysql(community_area_crimes, "community_area_crimes", spark)
+
+    # Downtown areas have higher rates of theft and robbery than residential areas.
+    
+
+    # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
+    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
+    #robbery_public = 
+
+    # More theft incidents occur around airports compared to other areas.
 
     
     elapsed = time.time() - start_total

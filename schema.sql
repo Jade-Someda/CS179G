@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS season_crimes (
     PRIMARY KEY (season)
 );
 
-/* THIS IS EMPTY */
 CREATE TABLE IF NOT EXISTS holidays (
     holiday_date DATE,
     holiday_name VARCHAR(100),
@@ -94,4 +93,9 @@ CREATE TABLE IF NOT EXISTS sport_location_crimes_by_type (
     total_crimes BIGINT,
     PRIMARY KEY (location_description, primary_type)
 );
-
+CREATE TABLE IF NOT EXISTS theft_by_location (
+    location_description VARCHAR(255) NOT NULL,
+    total_thefts BIGINT,
+    total_crimes BIGINT,
+    PRIMARY KEY (location_description)
+);
