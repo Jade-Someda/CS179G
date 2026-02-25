@@ -107,3 +107,9 @@ CREATE TABLE IF NOT EXISTS downtown_vs_residential_theft_robbery (
     rate DOUBLE,
     PRIMARY KEY (area_type)
 );
+
+CREATE TABLE IF NOT EXISTS transit_vs_commercial_robbery_count (
+    location_type VARCHAR(20),
+    robbery_count BIGINT,
+    PRIMARY KEY (location_type)
+);

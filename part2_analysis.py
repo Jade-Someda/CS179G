@@ -164,10 +164,10 @@ def main():
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
      # 1)filter out rows with invalid columns 
-    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
+    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location_description").isNotNull())
 
     # 2) group data into buckets: public transit and commercial areas
-    robberies_categorized = robberies.withColumn(
+    robberies_categorized = df_robbery.withColumn(
     "location_type",
     when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
     .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
@@ -176,12 +176,12 @@ def main():
     # 3) make comparison
     robbery_by_location = robberies_categorized.groupBy("location_type").agg(count("*").alias("robbery_count"))
 
-   
+    #4) automateically create relation in schema.sql for sql
+    write_to_mysql(robbery_by_location, "transit_vs_commercial_robbery_count", spark)
 
-   
 
     # More theft incidents occur around airports compared to other areas.
-
+    
     
     elapsed = time.time() - start_total
     print("Total runtime: {:.2f} seconds".format(elapsed))
