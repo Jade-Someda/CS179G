@@ -132,7 +132,6 @@ def main():
     write_to_mysql(community_area_crimes, "community_area_crimes", spark)
 
     # Downtown areas have higher rates of theft and robbery than residential areas.
-    
     df_area = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
 
     downtown_ids = [32, 8, 33, 28]
@@ -160,7 +159,6 @@ def main():
     )
 
     write_to_mysql(downtown_vs_residential, "downtown_vs_residential_theft_robbery", spark)
-
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
      # 1)filter out rows with invalid columns 
