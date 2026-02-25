@@ -88,11 +88,16 @@ def main():
     write_to_mysql(theft_vs_total, "theft_by_location", spark)
 
 
-    holiday_dates = [
-        "2024-01-01", "2024-07-04", "2024-12-25", "2023-01-01", "2023-07-04", "2023-12-25",
-        "2022-01-01", "2022-07-04", "2022-12-25", "2021-01-01", "2021-07-04", "2021-12-25",
-    ]
-    holidays_df = spark.createDataFrame([Row(holiday_date=d) for d in holiday_dates]).withColumn("holiday_date", col("holiday_date").cast("date"))
+    # Read holidays from MySQL holidays table
+    holidays_df = spark.read \
+        .format("jdbc") \
+        .option("url", JDBC_URL) \
+        .option("dbtable", "holidays") \
+        .option("user", JDBC_USER) \
+        .option("password", JDBC_PASSWORD) \
+        .option("driver", JDBC_DRIVER) \
+        .load()
+    holidays_df = holidays_df.withColumn("holiday_date", col("holiday_date").cast("date"))
     df_with_holiday = df.join(holidays_df, df["date_only"] == holidays_df["holiday_date"], "left")
     holiday_vs = df_with_holiday.withColumn(
         "day_type", when(col("holiday_date").isNotNull(), "Holiday").otherwise("Non-Holiday")
@@ -156,15 +161,61 @@ def main():
     write_to_mysql(downtown_vs_residential, "downtown_vs_residential_theft_robbery", spark)
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
-    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
-    #robbery_public = 
+     # 1)filter out rows with invalid columns 
+    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location_description").isNotNull())
+
+    # 2) group data into buckets: public transit and commercial areas
+    robberies_categorized = df_robbery.withColumn(
+    "location_type",
+    when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
+    .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
+    .otherwise("Other"))
+
+    # 3) make comparison
+    robbery_by_location = robberies_categorized.groupBy("location_type").agg(count("*").alias("robbery_count"))
+
+    #4) automateically create relation in schema.sql for sql
+    write_to_mysql(robbery_by_location, "transit_vs_commercial_robbery_count", spark)
+
 
     # More theft incidents occur around airports compared to other areas.
 
+    #1) filter - look for any location_description that contains any word of airport. 
+    #it could be airport, AIRPORT, airport terminal etc. 
+    theft = df.filter(
+    (col("primary_type") == "THEFT") &
+    (col("location_description").isNotNull()) 
+    )
+
+    #2) categorize #airport v.s anywhere else is certainly biased so was more specific
+    #airport v.s (others - commercial, transit, residentical)
+    theft_category = theft.withColumn("location_type", 
+    # Change the first line to:
+    when(col("location_description").rlike(r"(?i)AIR(PORT|CRAFT)"), "Airport")
+    .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
+    .when(col("location_description").rlike(r"(?i)(RESIDENTIAL|HOME|HOUSE|NEIGHBORHOOD|APARTMENT)"), "Residential")
+    .when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
+    .otherwise("Uncategorized"))
+
+    #3) evaluate
+    theft_by_location = theft_category.groupBy("location_type").agg(count("*").alias("theft_count"))
+   
+    #4) write to sql
+    write_to_mysql(theft_by_location, "airport_theft_count_comparison", spark)
     
     elapsed = time.time() - start_total
+    
+    print()
+    print()
+    print("-------------")
     print("Total runtime: {:.2f} seconds".format(elapsed))
+    print("-------------")
+    print()
+    print()
+
     spark.stop()
+
+    
 
 
 def write_to_mysql(dataframe, table, spark):
