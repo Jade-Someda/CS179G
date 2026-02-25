@@ -4,6 +4,8 @@ from pyspark.sql.functions import (
     col, when, hour, month, dayofmonth, count, to_date,
 )
 import time
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
 
 PARQUET_PATH = "/home/cs179g/project/CS179G/clean_chicago_crime"
 JDBC_URL = "jdbc:mysql://127.0.0.1:3306/cs179g"
@@ -57,6 +59,17 @@ def main():
     thanksgiving_dates = ["2022-11-24", "2023-11-23", "2024-11-28", "2021-11-25", "2020-11-26", "2019-11-28"]
     thanksgiving = df.filter(col("date_only").cast("string").isin(thanksgiving_dates)).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())
     write_to_mysql(thanksgiving, "thanksgiving_by_type", spark)
+    
+
+    sport_locations_df = df.filter(
+            (col("location_description").isNotNull())&
+            (col("location_description") != "") &
+            (col("location_description").rlike(r"(?i)\bsports?\b"))
+            )
+
+    crimes_sport_locations = sport_locations_df.groupby("location_description", "primary_type").agg(count("*").alias("total_crimes")).orderBy("location_description",col("total_crimes").desc())
+    write_to_mysql(crimes_sport_locations, "sport_location_crimes", spark)
+
 
     holiday_dates = [
         "2024-01-01", "2024-07-04", "2024-12-25", "2023-01-01", "2023-07-04", "2023-12-25",
@@ -79,13 +92,24 @@ def main():
     crimes_by_location = df_location.groupBy("location_description").agg(count("*").alias("total_crimes")).orderBy(col("total_crimes").desc())
     write_to_mysql(crimes_by_location, "crimes_by_location", spark)
 
-    crimes_by_loc_type = df_location.groupBy("location_description", "primary_type").agg(count("*").alias("total")).orderBy("location_description", col("total").desc())
-    write_to_mysql(crimes_by_loc_type, "crimes_by_location_and_type", spark)
+    #crimes_by_loc_type = df_location.groupBy("location_description", "primary_type").agg(count("*").alias("total")).orderBy("location_description", col("total").desc())
+    #write_to_mysql(crimes_by_loc_type, "crimes_by_location_and_type", spark)
 
+
+    location_type_counts = df_location.groupBy("location_description", "primary_type").agg(count("*").alias("total"))
+    location_totals = df_location.groupBy("location_description").agg(count("*").alias("location_total"))
+    location_totals_filtered = location_totals.filter(col("location_total") > 100)
+    joined = location_type_counts.join(location_totals_filtered,on="location_description",how="inner")
+    windowSpec = Window.partitionBy("location_description").orderBy(col("total").desc())
+    ranked = joined.withColumn("rank",row_number().over(windowSpec))
+    top_crime_per_location = ranked.filter(col("rank") == 1).drop("rank")
+    write_to_mysql(top_crime_per_location, "crimes_by_location", spark) 
+    
     df_community = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
     community_area_crimes = df_community.groupBy("community_area").agg(count("*").alias("total_crimes")).orderBy(col("total_crimes").desc())
     write_to_mysql(community_area_crimes, "community_area_crimes", spark)
 
+    
     elapsed = time.time() - start_total
     print("Total runtime: {:.2f} seconds".format(elapsed))
     spark.stop()

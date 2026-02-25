@@ -88,3 +88,10 @@ CREATE TABLE IF NOT EXISTS community_area_crimes (
     total_crimes BIGINT,
     PRIMARY KEY (community_area)
 );
+CREATE TABLE IF NOT EXISTS sport_location_crimes_by_type (
+    location_description VARCHAR(255),
+    primary_type VARCHAR(100),
+    total_crimes BIGINT,
+    PRIMARY KEY (location_description, primary_type)
+);
+
