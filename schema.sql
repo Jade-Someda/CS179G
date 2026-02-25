@@ -113,3 +113,10 @@ CREATE TABLE IF NOT EXISTS transit_vs_commercial_robbery_count (
     robbery_count BIGINT,
     PRIMARY KEY (location_type)
 );
+
+
+CREATE TABLE IF NOT EXISTS airport_theft_count_comparison (
+    location_type VARCHAR(20),
+    theft_count BIGINT,
+    PRIMARY KEY (location_type)
+);

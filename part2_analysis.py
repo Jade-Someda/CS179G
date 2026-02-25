@@ -181,11 +181,43 @@ def main():
 
 
     # More theft incidents occur around airports compared to other areas.
-    
+
+    #1) filter - look for any location_description that contains any word of airport. 
+    #it could be airport, AIRPORT, airport terminal etc. 
+    theft = df.filter(
+    (col("primary_type") == "THEFT") &
+    (col("location_description").isNotNull()) 
+    )
+
+    #2) categorize #airport v.s anywhere else is certainly biased so was more specific
+    #airport v.s (others - commercial, transit, residentical)
+    theft_category = theft.withColumn("location_type", 
+    # Change the first line to:
+    when(col("location_description").rlike(r"(?i)AIR(PORT|CRAFT)"), "Airport")
+    .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
+    .when(col("location_description").rlike(r"(?i)(RESIDENTIAL|HOME|HOUSE|NEIGHBORHOOD|APARTMENT)"), "Residential")
+    .when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
+    .otherwise("Uncategorized"))
+
+    #3) evaluate
+    theft_by_location = theft_category.groupBy("location_type").agg(count("*").alias("theft_count"))
+   
+    #4) write to sql
+    write_to_mysql(theft_by_location, "airport_theft_count_comparison", spark)
     
     elapsed = time.time() - start_total
+    
+    print()
+    print()
+    print("-------------")
     print("Total runtime: {:.2f} seconds".format(elapsed))
+    print("-------------")
+    print()
+    print()
+
     spark.stop()
+
+    
 
 
 def write_to_mysql(dataframe, table, spark):
