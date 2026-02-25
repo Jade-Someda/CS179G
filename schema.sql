@@ -99,3 +99,11 @@ CREATE TABLE IF NOT EXISTS theft_by_location (
     total_crimes BIGINT,
     PRIMARY KEY (location_description)
 );
+
+CREATE TABLE IF NOT EXISTS downtown_vs_residential_theft_robbery (
+    area_type VARCHAR(20),
+    tr_crimes BIGINT,
+    total_crimes BIGINT,
+    rate DOUBLE,
+    PRIMARY KEY (area_type)
+);

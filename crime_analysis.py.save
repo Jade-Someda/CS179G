@@ -1,9 +1,0 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
-from pyspark.sql.functions import hour, when, col
-
-# Add a column for time period
-crime_df = crime_df.withColumn(
-    "time_period",
-    when((hour(col("date")) >= 8) & (hour(col("date")) < 16), "Daytime")
-    .when((hour(col("date")) >= 16) & (hour(col("date")) < 24), "Even

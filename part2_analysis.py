@@ -88,11 +88,16 @@ def main():
     write_to_mysql(theft_vs_total, "theft_by_location", spark)
 
 
-    holiday_dates = [
-        "2024-01-01", "2024-07-04", "2024-12-25", "2023-01-01", "2023-07-04", "2023-12-25",
-        "2022-01-01", "2022-07-04", "2022-12-25", "2021-01-01", "2021-07-04", "2021-12-25",
-    ]
-    holidays_df = spark.createDataFrame([Row(holiday_date=d) for d in holiday_dates]).withColumn("holiday_date", col("holiday_date").cast("date"))
+    # Read holidays from MySQL holidays table
+    holidays_df = spark.read \
+        .format("jdbc") \
+        .option("url", JDBC_URL) \
+        .option("dbtable", "holidays") \
+        .option("user", JDBC_USER) \
+        .option("password", JDBC_PASSWORD) \
+        .option("driver", JDBC_DRIVER) \
+        .load()
+    holidays_df = holidays_df.withColumn("holiday_date", col("holiday_date").cast("date"))
     df_with_holiday = df.join(holidays_df, df["date_only"] == holidays_df["holiday_date"], "left")
     holiday_vs = df_with_holiday.withColumn(
         "day_type", when(col("holiday_date").isNotNull(), "Holiday").otherwise("Non-Holiday")
@@ -128,9 +133,37 @@ def main():
 
     # Downtown areas have higher rates of theft and robbery than residential areas.
     
+    df_area = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
+
+    downtown_ids = [32, 8, 33, 28]
+
+    df_area = df_area.withColumn(
+        "area_type",
+        when(col("community_area").isin(downtown_ids), "Downtown")
+        .otherwise("Residential")
+    )
+
+    area_totals = (
+        df_area.groupBy("area_type")
+        .agg(count("*").alias("total_crimes"))
+    )
+
+    area_tr = (
+        df_area.filter(col("primary_type").isin("THEFT", "ROBBERY"))
+        .groupBy("area_type")
+        .agg(count("*").alias("tr_crimes"))
+    )
+
+    downtown_vs_residential = (
+        area_tr.join(area_totals, "area_type")
+        .withColumn("rate", col("tr_crimes") / col("total_crimes"))
+    )
+
+    write_to_mysql(downtown_vs_residential, "downtown_vs_residential_theft_robbery", spark)
+
 
     # Public transit locations (train stations, buses) have higher robbery rates than commercial areas.
-    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location").isNotNull())
+    df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location_description").isNotNull())
     #robbery_public = 
 
     # More theft incidents occur around airports compared to other areas.
