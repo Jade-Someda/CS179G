@@ -207,9 +207,9 @@ def main():
     
     print()
     print()
-    print("-------------")
+    print("----------------------------------------------")
     print("Total runtime: {:.2f} seconds".format(elapsed))
-    print("-------------")
+    print("----------------------------------------------")
     print()
     print()
 
