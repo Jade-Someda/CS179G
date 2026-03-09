@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, request, send_from_directory, abort
 import os
+import json
 import pymysql
 import statistics
 import math
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
 
 app = Flask(__name__)
 
@@ -52,13 +55,50 @@ CATEGORIES = {
     }
 }
 
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.2)
+
+insight_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a careful data analyst for Chicago crime data. Only use the data that is provided.",
+        ),
+        (
+            "human",
+            """
+Table key: {table_key}
+User question: {question}
+User hypothesis: {hypothesis}
+
+Sample rows (JSON): {sample_rows}
+Metrics (JSON): {metrics}
+
+Write:
+1) 3-5 short bullet points in plain English about the main patterns you see.
+2) A 1-2 sentence conclusion that says whether the hypothesis is supported, mixed, or not_supported.
+
+Return ONLY JSON with this format:
+{
+  "hypothesis_status": "supported" | "mixed" | "not_supported",
+  "bullets": ["...", "..."],
+  "conclusion": "..."
+}
+""",
+        ),
+    ]
+)
+
 def query_table(table_name):
-    conn = pymysql.connect(**DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT * FROM {table_name}")
-    data = cursor.fetchall()
-    conn.close()
-    return data
+    try:
+        conn = pymysql.connect(**DB_CONFIG, cursorclass=pymysql.cursors.DictCursor)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {table_name}")
+        data = cursor.fetchall()
+        conn.close()
+        return data
+    except Exception as e:
+        print(f"DB ERROR for {table_name}: {e}")
+        raise
 
 ALLOWED_TABLES = {t for items in CATEGORIES.values() for t in items.values()}
 
@@ -231,6 +271,51 @@ def build_insight_response(payload):
 def generate_insight():
     payload = request.get_json(silent=True) or {}
     return jsonify(build_insight_response(payload))
+
+
+def build_llm_insight_response(payload):
+    table_key = payload.get("tableKey")
+    sample_rows = payload.get("sampleRows") or []
+    if not isinstance(sample_rows, list):
+        sample_rows = []
+    rows = [row for row in sample_rows if isinstance(row, dict)]
+    count_key = find_count_key(rows)
+    base_summary = summarize_rows(table_key, rows, count_key)
+    question = payload.get("question") or ""
+    hypothesis = payload.get("hypothesis") or ""
+    msg = insight_prompt.format_messages(
+        table_key=table_key,
+        question=question,
+        hypothesis=hypothesis,
+        sample_rows=json.dumps(sample_rows)[:4000],
+        metrics=json.dumps(base_summary["metrics"]),
+    )
+    try:
+        raw = llm.invoke(msg)
+        try:
+            data = json.loads(raw.content)
+        except Exception:
+            data = {
+                "hypothesis_status": "mixed",
+                "bullets": [raw.content],
+                "conclusion": "The model response could not be parsed as structured JSON.",
+            }
+        return {
+            "hypothesis_status": data.get("hypothesis_status", "mixed"),
+            "metrics": base_summary["metrics"],
+            "summary": {
+                "bullets": data.get("bullets", []),
+                "conclusion": data.get("conclusion", ""),
+            },
+        }
+    except Exception:
+        return build_insight_response(payload)
+
+
+@app.route("/api/insights_llm", methods=["POST"])
+def generate_llm_insight():
+    payload = request.get_json(silent=True) or {}
+    return jsonify(build_llm_insight_response(payload))
 
 
 @app.route("/")

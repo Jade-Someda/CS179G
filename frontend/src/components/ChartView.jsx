@@ -18,6 +18,34 @@ export default function ChartView({ table, data }) {
     return <p className="chart-empty">No chart data available for this selection.</p>
   }
 
+  if (table === 'hourly_crimes') {
+    const rows = [...data]
+      .map(row => ({
+        ...row,
+        hour_num: Number(row.hour),
+        crime_count_num: Number(row.crime_count),
+      }))
+      .filter(row => Number.isFinite(row.hour_num) && Number.isFinite(row.crime_count_num))
+      .sort((a, b) => a.hour_num - b.hour_num)
+
+    return (
+      <div className="chart-block">
+        <div className="chart-title">Crime volume by hour of day</div>
+        <div className="chart-wrap">
+          <ResponsiveContainer width="100%" height={290}>
+            <BarChart data={rows}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="hour_num" label={{ value: 'Hour of Day', position: 'insideBottom', offset: -5 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="crime_count_num" fill="#10b981" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    )
+  }
+
   if (table === 'yearly_crimes') {
     const rows = [...data]
       .map(row => ({
@@ -46,6 +74,33 @@ export default function ChartView({ table, data }) {
                 dot={{ r: 2.5 }}
               />
             </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    )
+  }
+
+  if (table === 'time_period_crimes') {
+    const rows = [...data]
+      .map(row => ({
+        ...row,
+        time_period: String(row.time_period || 'Unknown'),
+        total_crimes_num: Number(row.total_crimes),
+      }))
+      .filter(row => Number.isFinite(row.total_crimes_num))
+
+    return (
+      <div className="chart-block">
+        <div className="chart-title">Crime risk by time of day</div>
+        <div className="chart-wrap">
+          <ResponsiveContainer width="100%" height={290}>
+            <BarChart data={rows}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="time_period" />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="total_crimes_num" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
@@ -130,6 +185,35 @@ export default function ChartView({ table, data }) {
               )
             })}
           </MapContainer>
+        </div>
+      </div>
+    )
+  }
+
+  if (table === 'thanksgiving_by_type') {
+    const rows = [...data]
+      .map(row => ({
+        ...row,
+        primary_type: String(row.primary_type || 'Unknown'),
+        total_num: Number(row.total),
+      }))
+      .filter(row => Number.isFinite(row.total_num))
+      .sort((a, b) => b.total_num - a.total_num)
+      .slice(0, 5)
+
+    return (
+      <div className="chart-block">
+        <div className="chart-title">Thanksgiving crimes by type</div>
+        <div className="chart-wrap">
+          <ResponsiveContainer width="100%" height={290}>
+            <BarChart data={rows}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="primary_type" angle={0} textAnchor="end" height={100} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="total_num" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     )

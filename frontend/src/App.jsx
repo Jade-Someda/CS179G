@@ -104,7 +104,7 @@ export default function App() {
     setInsightsLoading(true)
     setInsightsError(null)
     try {
-      const res = await fetch('/api/insights', {
+      const res = await fetch('/api/insights_llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
