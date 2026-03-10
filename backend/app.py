@@ -55,7 +55,7 @@ CATEGORIES = {
     }
 }
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.2, , api_key="AIzaSyAB-Q80vl1NLrLG3btzsfR1xr5mq7oioEk")
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-001", temperature=0.2, api_key="AIzaSyAB-Q80vl1NLrLG3btzsfR1xr5mq7oioEk")
 
 insight_prompt = ChatPromptTemplate.from_messages(
     [
