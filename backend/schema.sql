@@ -31,7 +31,6 @@ CREATE TABLE IF NOT EXISTS holidays (
     PRIMARY KEY (holiday_date)
 );
 
-/* THIS DOES NOT SHOW HOLIDAY, ONLY NONHOLIDAY */
 CREATE TABLE IF NOT EXISTS holiday_vs_nonholiday (
     day_type VARCHAR(20),
     total_crimes BIGINT,
@@ -62,7 +61,6 @@ CREATE TABLE IF NOT EXISTS great_recession_by_type (
     PRIMARY KEY (primary_type)
 );
 
-/* THIS IS not working, year is not appearing */
 CREATE TABLE IF NOT EXISTS yearly_crimes (
     year INT,
     total_crimes BIGINT,

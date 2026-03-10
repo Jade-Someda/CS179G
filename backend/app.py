@@ -78,11 +78,11 @@ Write:
 2) A 1-2 sentence conclusion that says whether the hypothesis is supported, mixed, or not_supported.
 
 Return ONLY JSON with this format:
-{
+{{
   "hypothesis_status": "supported" | "mixed" | "not_supported",
   "bullets": ["...", "..."],
   "conclusion": "..."
-}
+}}
 """,
         ),
     ]

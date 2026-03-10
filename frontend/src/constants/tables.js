@@ -77,6 +77,12 @@ export const TABLE_META = {
     description: 'Crimes by type during Thanksgiving period, showing which offenses are most common.',
     category: 'Seasonality',
   },
+  season_crimes: {
+  question: 'Which season experiences the most crime?',
+  hypothesis: 'Summer months see significantly higher crime rates than winter.',
+  description: 'Crime totals aggregated by season (Summer, Late Winter, Other) to identify seasonal patterns.',
+  category: 'Seasonality',
+  },
 
 
 }
