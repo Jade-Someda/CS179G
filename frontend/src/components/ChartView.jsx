@@ -389,6 +389,50 @@ export default function ChartView({ table, data }) {
     </div>
   )
 }
+if (table === 'theft_by_location') {
+    const rows = [...data]
+      .map(row => ({
+        location: String(row.location_description || 'Unknown'),
+        total_crimes: Number(row.total_crimes),
+        total_thefts: Number(row.total_thefts),
+        theft_rate: Number(row.total_thefts) / Number(row.total_crimes),
+      }))
+      .filter(row => Number.isFinite(row.total_crimes) && row.total_crimes > 0)
+      .sort((a, b) => b.theft_rate - a.theft_rate)
+      .slice(0, 10)
+  
+    return (
+      <div className="chart-block">
+        <div className="chart-title">Theft rate by location</div>
+        <div className="chart-wrap">
+          <ResponsiveContainer width="100%" height={290}>
+            <BarChart data={rows} margin={{ top: 20, right: 80, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="location"
+                angle={-35}
+                textAnchor="end"
+                height={120}
+                tick = {{ fontSize: 10 }}
+
+              />
+              <YAxis />
+              <Tooltip
+                formatter={(value, name, props) => {
+                  const { total_thefts, total_crimes } = props.payload
+                  return [
+                    `${(value * 100).toFixed(2)}%`,
+                    `Theft Rate (${total_thefts}/${total_crimes})`
+                  ]
+                }}
+              />
+              <Bar dataKey="theft_rate" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    )
+  }
 if (table === 'christmas_vs_nonchristmas_by_type') {
   const CHRISTMAS_DAYS = 31;
   const NON_CHRISTMAS_DAYS = 365 - 31;
