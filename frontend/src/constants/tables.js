@@ -63,7 +63,7 @@ export const TABLE_META = {
   time_period_crimes: {
     question: 'Which time of day is riskiest overall?',
     hypothesis: 'Crimes cluster in evening and overnight periods.',
-    description: 'Daytime, evening, and overnight windows aggregated across all years in the dataset.',
+    description: 'Aggregated across all years, crime counts are grouped into three time windows: Daytime (8:00 AM – 3:59 PM), Evening (4:00 PM – 11:59 PM), and Overnight (12:00 AM – 7:59 AM).',
     category: 'Time of day',
   },
   monthly_crimes: {
@@ -91,7 +91,7 @@ export const TABLE_META = {
     description: 'Crimes aggregated by community area; pairs well with map visualizations.',
     category: 'Location-Based / Spatial',
   },
-  thanksgiving_by_type: {
+  thanksgiving_vs_nonthanksgiving_by_type: {
     question: 'What crime types rise during Thanksgiving?',
     hypothesis: 'Certain crime types spike during the Thanksgiving holiday period.',
     description: 'Crimes by type during Thanksgiving period, showing which offenses are most common.',
