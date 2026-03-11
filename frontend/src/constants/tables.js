@@ -84,21 +84,21 @@ export const TABLE_META = {
     category: 'Seasonality',
   },
 
-  christmas_by_type: {
+  christmas_vs_nonchristmas_by_type: {
     question: 'What crime types increase during Christmas?',
     hypothesis: 'Property crimes such as theft increase during the Christmas holiday due to increased shopping and travel.',
     description: 'Examines the distribution of crimes reported during the Christmas holiday period and highlights which offenses are most common.',
     category: 'Seasonality',
   },
 
-  halloween_by_type: {
+  halloween_vs_nonhalloween_by_type: {
     question: 'What crime types increase during Halloween?',
     hypothesis: 'Public disturbances and assault-related crimes increase during Halloween due to large gatherings and nightlife activity.',
     description: 'Displays crime types reported during the Halloween period, helping identify which incidents are most associated with the holiday.',
     category: 'Seasonality',
   },
 
-  holiday_vs_nonholiday_crimes: {
+  holiday_vs_nonholiday: {
     question: 'How do crime levels differ between holidays and non-holidays?',
     hypothesis: 'Crime patterns differ during holidays compared to regular days due to increased travel, gatherings, and nightlife.',
     description: 'Compares total crime counts on major holidays against typical non-holiday days to determine if holidays correlate with increased or decreased crime activity.',

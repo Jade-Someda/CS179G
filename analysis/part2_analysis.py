@@ -52,6 +52,51 @@ def main():
 
     christmas = df.filter(col("month") == 12).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())
     write_to_mysql(christmas, "christmas_by_type", spark)
+    
+    df_with_christmas_flag = df.withColumn("day_type",when(col("month") == 12, "Christmas").otherwise("Non-Christmas"))
+
+    # Filter property crimes
+    property_crimes = ["THEFT", "BURGLARY", "ROBBERY"]
+    df_property = df_with_christmas_flag.filter(col("primary_type").isin(property_crimes))
+
+    # Group by day_type and primary_type
+    christmas_distribution = df_property.groupBy("day_type", "primary_type") \
+                                        .agg(count("*").alias("total"))
+
+    # Write to MySQL
+    write_to_mysql(christmas_distribution, "christmas_vs_nonchristmas_by_type", spark)
+   
+#     df_with_christmas_flag = df.withColumn(
+#     "day_type",
+#     when(col("month") == 12, "Christmas").otherwise("Non-Christmas")
+# )
+
+# # Optionally filter only property crimes (e.g., THEFT, BURGLARY)
+# property_crimes = ["THEFT", "BURGLARY", "ROBBERY"]  # adjust as needed
+# df_property = df_with_christmas_flag.filter(col("primary_type").isin(property_crimes))
+
+# # Total crimes by day type
+# total_by_day_type = df_property.groupBy("day_type").agg(count("*").alias("total_crimes"))
+
+# # Count number of days in each group
+# num_christmas_days = 20 * 31  # 31 days in December × 20 years
+# num_non_christmas_days = (20 * 365) - num_christmas_days  # approx, ignoring leap years
+
+# # Add average per day
+# total_by_day_type = total_by_day_type.withColumn(
+#     "avg_per_day",
+#     when(col("day_type") == "Christmas", col("total_crimes") / num_christmas_days)
+#     .otherwise(col("total_crimes") / num_non_christmas_days)
+# )
+
+# # Top crimes per day_type
+# top_crimes = df_property.groupBy("day_type", "primary_type") \
+#     .agg(count("*").alias("total")) \
+#     .orderBy("day_type", col("total").desc())
+
+# # Write to MySQL
+# write_to_mysql(total_by_day_type, "christmas_vs_nonchristmas_totals", spark)
+# write_to_mysql(top_crimes, "christmas_vs_nonchristmas_by_type", spark)
     # theft_df = df.filter(col("primary_type") == "THEFT")
 
     # december_thefts = theft_df.filter(col("month") == 12).agg(count("*").alias("december_total"))
@@ -66,6 +111,15 @@ def main():
 
     halloween = df.filter((col("month") == 10) & (col("day") == 31)).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())
     write_to_mysql(halloween, "halloween_by_type", spark)
+    
+    df_with_halloween_flag = df.withColumn(
+        "day_type",
+        when((col("month") == 10) & (col("day") == 31), "Halloween").otherwise("Non-Halloween")
+    )
+    top_halloween_crimes = ["ASSAULT", "BATTERY", "PUBLIC PEACE VIOLATION"]
+    df_top_crimes = df_with_halloween_flag.filter(col("primary_type").isin(top_halloween_crimes))
+    halloween_distribution = df_top_crimes.groupBy("day_type", "primary_type").agg(count("*").alias("total"))
+    write_to_mysql(halloween_distribution, "halloween_vs_nonhalloween_by_type", spark)
 
     thanksgiving_dates = ["2022-11-24", "2023-11-23", "2024-11-28", "2021-11-25", "2020-11-26", "2019-11-28"]
     thanksgiving = df.filter(col("date_only").cast("string").isin(thanksgiving_dates)).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())

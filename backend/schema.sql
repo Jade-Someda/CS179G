@@ -121,9 +121,16 @@ CREATE TABLE IF NOT EXISTS airport_theft_count_comparison (
     PRIMARY KEY (location_type)
 );
 
--- CREATE TABLE IF NOT EXISTS christmas_vs_avg_thefts (
---     day_type VARCHAR(20),
---     total_thefts BIGINT,
---     avg_per_month DOUBLE,
---     PRIMARY KEY (day_type)
--- );
+CREATE TABLE IF NOT EXISTS christmas_vs_nonchristmas_by_type (
+    day_type VARCHAR(20),
+    primary_type VARCHAR(100),
+    total BIGINT,
+    PRIMARY KEY (day_type, primary_type)
+);
+
+CREATE TABLE IF NOT EXISTS halloween_vs_nonhalloween_by_type (
+    day_type VARCHAR(20),        
+    primary_type VARCHAR(100),  
+    total BIGINT,        
+    PRIMARY KEY (day_type, primary_type)
+);

@@ -34,9 +34,10 @@ CATEGORIES = {
         "Monthly Crimes": "monthly_crimes",
         "Season Crimes": "season_crimes",
         "Holiday vs Non-Holiday": "holiday_vs_nonholiday",
-        "Christmas": "christmas_by_type",
+        # "Christmas": "christmas_by_type",
+        "Christmas": "christmas_vs_nonchristmas_by_type",
         "Thanksgiving": "thanksgiving_by_type",
-        "Halloween": "halloween_by_type"
+        "Halloween": "halloween_vs_nonhalloween_by_type"
     },
     "Location-Based / Spatial": {
         "Crimes by Location": "crimes_by_location",

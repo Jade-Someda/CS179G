@@ -107,31 +107,50 @@ export default function ChartView({ table, data }) {
     )
   }
 
-  if (table === 'holiday_vs_nonholiday') {
-    const rows = [...data]
-      .map(row => ({
-        ...row,
-        total_crimes_num: Number(row.total_crimes),
-      }))
-      .filter(row => Number.isFinite(row.total_crimes_num))
+ if (table === 'holiday_vs_nonholiday') {
+  // Total number of years in the dataset
+  const NUM_YEARS = 20;
+  const HOLIDAYS_PER_YEAR = 11;
+  const DAYS_PER_YEAR = 365;
 
-    return (
-      <div className="chart-block">
-        <div className="chart-title">Holiday vs non-holiday comparison</div>
-        <div className="chart-wrap">
-          <ResponsiveContainer width="100%" height={290}>
-            <BarChart data={rows}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="day_type" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="total_crimes_num" fill="#3b82f6" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+  // Total days over all years
+  const totalHolidayDays = HOLIDAYS_PER_YEAR * NUM_YEARS;
+  const totalNonHolidayDays = (DAYS_PER_YEAR - HOLIDAYS_PER_YEAR) * NUM_YEARS;
+
+  const rows = [...data]
+    .map(row => {
+      const totalCrimes = Number(row.total_crimes);
+      let avg_crimes_per_day = totalCrimes; // fallback
+      if (row.day_type === "Holiday") {
+        avg_crimes_per_day = totalCrimes / totalHolidayDays;
+      } else if (row.day_type === "Non-Holiday") {
+        avg_crimes_per_day = totalCrimes / totalNonHolidayDays;
+      }
+      return {
+        day_type: row.day_type,
+        avg_crimes_per_day
+      };
+    })
+    .filter(row => Number.isFinite(row.avg_crimes_per_day));
+
+  return (
+    <div className="chart-block">
+      <div className="chart-title">Holiday vs Non-Holiday Crimes (Average per Day)</div>
+      <div className="chart-wrap">
+        <ResponsiveContainer width="100%" height={290}>
+          <BarChart data={rows}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="day_type" />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip formatter={(v) => v.toFixed(2)} />
+            <Bar dataKey="avg_crimes_per_day" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-    )
-  }
+    </div>
+  )
+}
+
 
   if (table === 'community_area_crimes') {
     const topRows = [...data]
@@ -369,6 +388,106 @@ export default function ChartView({ table, data }) {
     </div>
   )
 }
+if (table === 'christmas_vs_nonchristmas_by_type') {
+  const CHRISTMAS_DAYS = 31;
+  const NON_CHRISTMAS_DAYS = 365 - 31;
+
+  // Transform data into grouped chart format
+  const crimeTypes = ["THEFT", "BURGLARY", "ROBBERY"];
+  const groupedData = crimeTypes.map(type => {
+    const christmasRow = data.find(
+      row => row.primary_type === type && row.day_type === 'Christmas'
+    );
+    const nonChristmasRow = data.find(
+      row => row.primary_type === type && row.day_type === 'Non-Christmas'
+    );
+
+    const christmasPerDay = christmasRow ? Number(christmasRow.total) / CHRISTMAS_DAYS : 0;
+    const nonChristmasPerDay = nonChristmasRow ? Number(nonChristmasRow.total) / NON_CHRISTMAS_DAYS : 0;
+
+    return {
+      crime: type,
+      Christmas: christmasPerDay,
+      "Non-Christmas": nonChristmasPerDay
+    };
+  });
+
+  return (
+    <div className="chart-block">
+      <div className="chart-title">Crime Comparison: Christmas vs Non-Christmas (Per Day)</div>
+      <div className="chart-wrap">
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart
+            data={groupedData}
+            margin={{ top: 20, right: 40, left: 10, bottom: 40 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="crime" angle={-35} textAnchor="end" height={80} />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip
+              formatter={(value, name) => `${value.toFixed(2)} per day`}
+            />
+            <Bar dataKey="Christmas" fill="#dc2626" radius={[6,6,0,0]} />
+            <Bar dataKey="Non-Christmas" fill="#0d9488" radius={[6,6,0,0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+if (table === 'halloween_vs_nonhalloween_by_type') {
+  const HALLOWEEN_DAYS = 1 * 20;       // 1 day per year × 20 years
+  const NON_HALLOWEEN_DAYS = (365 - 1) * 20; // rest of days × 20 years
+
+  // Focus on top 3 public disturbance / assault crimes
+  const crimeTypes = ["ASSAULT", "BATTERY", "PUBLIC PEACE VIOLATION"];
+
+  const groupedData = crimeTypes.map(type => {
+    const halloweenRow = data.find(
+      row => row.primary_type === type && row.day_type === 'Halloween'
+    );
+    const nonHalloweenRow = data.find(
+      row => row.primary_type === type && row.day_type === 'Non-Halloween'
+    );
+
+    const halloweenPerDay = halloweenRow ? Number(halloweenRow.total) / HALLOWEEN_DAYS : 0;
+    const nonHalloweenPerDay = nonHalloweenRow ? Number(nonHalloweenRow.total) / NON_HALLOWEEN_DAYS : 0;
+
+    return {
+      crime: type,
+      Halloween: halloweenPerDay,
+      "Non-Halloween": nonHalloweenPerDay
+    };
+  });
+
+  return (
+    <div className="chart-block">
+      <div className="chart-title">
+        Crime Comparison: Halloween vs Non-Halloween (Average per Day)
+      </div>
+      <div className="chart-wrap">
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart
+            data={groupedData}
+            margin={{ top: 20, right: 40, left: 10, bottom: 40 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="crime" angle={-35} textAnchor="end" height={80} />
+            <YAxis tick={{ fontSize: 12 }} />
+            <Tooltip
+              formatter={(value, name) => `${value.toFixed(2)} per day`}
+            />
+            <Bar dataKey="Halloween" fill="#a3a3a3" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="Non-Halloween" fill="#14b8a6" radius={[6, 6, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+
 
   return (
     <div className="chart-block">
