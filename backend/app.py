@@ -239,11 +239,10 @@ def build_llm_insight_response(payload):
     question = payload.get("question") or ""
     hypothesis = payload.get("hypothesis") or ""
     if llm is None:
-        print("LLM not configured: GEMINI_API_KEY is missing.")
-        return {"error": "LLM not configured. Set GEMINI_API_KEY to generate insights."}, 503
+        print("Insight model not configured: GEMINI_API_KEY is missing.")
+        return {"error": "Insight service not configured. Set GEMINI_API_KEY to generate insights."}, 503
 
     try:
-        # Send full table to LLM, truncated to fit context window
         sample_for_llm = json.dumps(rows)[:12000]
         msg = insight_prompt.format_messages(
             table_key=table_key,
@@ -265,7 +264,7 @@ def build_llm_insight_response(payload):
             conclusion = data.get("conclusion", "")
             status = data.get("hypothesis_status", "mixed")
         except Exception:
-            print("Could not parse LLM response as JSON, using raw text instead.")
+            print("Could not parse response as JSON, using raw text instead.")
             bullets = [content.strip()] if content.strip() else []
             conclusion = ""
             status = "mixed"
@@ -279,8 +278,8 @@ def build_llm_insight_response(payload):
             },
         }
     except Exception as e:
-        print(f"LLM call failed: {e}")
-        return {"error": "Could not generate insight. The LLM request failed."}, 503
+        print(f"Insight request failed: {e}")
+        return {"error": "Could not generate insight. The request failed."}, 503
 
 
 @app.route("/api/insights_llm", methods=["POST"])

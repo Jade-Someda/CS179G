@@ -399,34 +399,6 @@ if (table === 'thanksgiving_vs_nonthanksgiving_by_type') {
   );
 }
 
-if (table === 'airport_theft_count_comparison') {
-  const rows = [...data]
-    .map(row => ({
-      ...row,
-      location_type: String(row.location_type || 'Unknown'),
-      theft_count_num: Number(row.theft_count),
-    }))
-    .filter(row => Number.isFinite(row.theft_count_num))
-    .sort((a, b) => b.theft_count_num - a.theft_count_num)
-
-  return (
-    <div className="chart-block">
-      <div className="chart-title">Theft counts: Airport vs Other locations</div>
-      <div className="chart-wrap">
-        <ResponsiveContainer width="100%" height={290}>
-          <BarChart data={rows}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="location_type" />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey="theft_count_num" fill="#0a70d5" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  )
-}
-
 if (table === 'season_crimes') {
   const rows = [...data]
     .map(row => ({
@@ -487,18 +459,6 @@ if (table === 'season_crimes') {
       </div>
     )
   }
-  // if(table === transit_vs_commercial_robbery_count) {      finish, include rates
-  //   const rows = [...data]
-  //     .map(row => ({
-  //       ...row,
-  //       primary_type: String(row.primary_type || 'Unknown'),
-  //       total_num: Number(row.total),
-  //     }))
-  //     .filter(row => Number.isFinite(row.total_num))
-  //     .sort((a, b) => b.total_num - a.total_num)
-  //     .slice(0, 2)
-  // }
-
   if (table === 'great_recession_by_type') {
     const rows = [...data]
       .map(row => ({
