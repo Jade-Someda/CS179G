@@ -6,15 +6,14 @@ from pyspark.sql.functions import (
 import time
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
-from pyspark.sql.functions import col, count, regexp_replace, trim, upper #omit if neccesary 
+from pyspark.sql.functions import col, count, regexp_replace, trim, upper 
 
 PARQUET_PATH = "/home/cs179g/project/CS179G/clean_chicago_crime"
 JDBC_URL = "jdbc:mysql://127.0.0.1:3306/cs179g"
 JDBC_USER = "root"
 JDBC_PASSWORD = ""
 JDBC_DRIVER = "com.mysql.cj.jdbc.Driver"
-#omit if neccesary
-#--------------------------------------------------------------------------------------------------
+
 def normalize_location(location_col):
     n = trim(upper(location_col))
 
@@ -54,9 +53,6 @@ def normalize_location(location_col):
     n = regexp_replace(n, r'OTHER \(SPECIFY\)', 'OTHER')
 
     return n
-
-#--------------------------------------------------------------------------------------------------
-
 
 
 
@@ -102,59 +98,14 @@ def main():
     
     df_with_christmas_flag = df.withColumn("day_type",when(col("month") == 12, "Christmas").otherwise("Non-Christmas"))
 
-    # Filter property crimes
     property_crimes = ["THEFT", "BURGLARY", "ROBBERY"]
     df_property = df_with_christmas_flag.filter(col("primary_type").isin(property_crimes))
 
-    # Group by day_type and primary_type
     christmas_distribution = df_property.groupBy("day_type", "primary_type") \
                                         .agg(count("*").alias("total"))
 
-    # Write to MySQL
     write_to_mysql(christmas_distribution, "christmas_vs_nonchristmas_by_type", spark)
    
-#     df_with_christmas_flag = df.withColumn(
-#     "day_type",
-#     when(col("month") == 12, "Christmas").otherwise("Non-Christmas")
-# )
-
-# # Optionally filter only property crimes (e.g., THEFT, BURGLARY)
-# property_crimes = ["THEFT", "BURGLARY", "ROBBERY"]  # adjust as needed
-# df_property = df_with_christmas_flag.filter(col("primary_type").isin(property_crimes))
-
-# # Total crimes by day type
-# total_by_day_type = df_property.groupBy("day_type").agg(count("*").alias("total_crimes"))
-
-# # Count number of days in each group
-# num_christmas_days = 20 * 31  # 31 days in December × 20 years
-# num_non_christmas_days = (20 * 365) - num_christmas_days  # approx, ignoring leap years
-
-# # Add average per day
-# total_by_day_type = total_by_day_type.withColumn(
-#     "avg_per_day",
-#     when(col("day_type") == "Christmas", col("total_crimes") / num_christmas_days)
-#     .otherwise(col("total_crimes") / num_non_christmas_days)
-# )
-
-# # Top crimes per day_type
-# top_crimes = df_property.groupBy("day_type", "primary_type") \
-#     .agg(count("*").alias("total")) \
-#     .orderBy("day_type", col("total").desc())
-
-# # Write to MySQL
-# write_to_mysql(total_by_day_type, "christmas_vs_nonchristmas_totals", spark)
-# write_to_mysql(top_crimes, "christmas_vs_nonchristmas_by_type", spark)
-    # theft_df = df.filter(col("primary_type") == "THEFT")
-
-    # december_thefts = theft_df.filter(col("month") == 12).agg(count("*").alias("december_total"))
-    # monthly_thefts = theft_df.groupBy("month").agg(count("*").alias("total_thefts"))
-    # avg_monthly_thefts = monthly_thefts.agg((_sum("total_thefts") / count("*")).alias("avg_per_month"))
-    # christmas_vs_avg_thefts = december_thefts.crossJoin(avg_monthly_thefts).select(
-    #     lit("Christmas Month").alias("day_type"),
-    #     col("december_total").alias("total_thefts"),
-    #     col("avg_per_month")
-    # )
-    # write_to_mysql(christmas_vs_avg_thefts, "christmas_vs_avg_thefts", spark)
 
     halloween = df.filter((col("month") == 10) & (col("day") == 31)).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())
     write_to_mysql(halloween, "halloween_by_type", spark)
@@ -178,15 +129,12 @@ def main():
         .otherwise("Non-Thanksgiving")
     )
 
-    # Filter for top Thanksgiving crimes
     top_thanksgiving_crimes = ["BATTERY", "THEFT", "CRIMINAL DAMAGE", "ASSAULT"]
     df_top_thanksgiving_crimes = df_with_thanksgiving_flag.filter(col("primary_type").isin(top_thanksgiving_crimes))
 
-    # Aggregate by day type and crime type
     thanksgiving_distribution = df_top_thanksgiving_crimes.groupBy("day_type", "primary_type") \
         .agg(count("*").alias("total"))
 
-    # Write to MySQL
     write_to_mysql(thanksgiving_distribution, "thanksgiving_vs_nonthanksgiving_by_type", spark)
     from pyspark.sql.functions import regexp_replace, trim
 
@@ -195,18 +143,6 @@ def main():
         trim(regexp_replace(col("location_description"), r"\s*/\s*", "/"))
     )
 
-    #old sports_by_location -----------------------------------------------------------------
-    # sport_locations_df = df.filter(
-    #         (col("location_description").isNotNull())&
-    #         (col("location_description") != "") &
-    #         (col("location_description").rlike(r"(?i)\bsports?\b"))
-    #         )
-
-    # crimes_sport_locations = sport_locations_df.groupby("location_description", "primary_type").agg(count("*").alias("total_crimes")).orderBy("location_description",col("total_crimes").desc())
-    # write_to_mysql(crimes_sport_locations, "sport_location_crimes", spark)
-    # df_location = df.filter(col("location_description").isNotNull() & (col("location_description") != ""))
-
-    #NEW sports_by_location -----------------------------------------------------------------
     sport_locations_df = df.filter(
     (col("location_description").isNotNull()) &
     (col("location_description") != "") &
@@ -232,33 +168,6 @@ def main():
     ).orderBy(col("total_crimes").desc())
 
     write_to_mysql(crimes_sport_locations, "sport_location_crimes", spark)
-
-#-------------------------------------------------------------------------------------
-
-    #OLD THEFT_BY_LOCATION
-    # df_location = df.filter(col("location_description").isNotNull() & (col("location_description") != ""))
-    
-    # theft_counts = df_location.filter(col("primary_type") == "THEFT") \
-    #     .groupBy("location_description") \
-    #     .agg(count("*").alias("total_thefts")) \
-    #     .orderBy(col("total_thefts").desc())
-
-
-    # total_counts = df_location.groupBy("location_description") \
-    #     .agg(count("*").alias("total_crimes")) \
-    #     .orderBy(col("total_crimes").desc())
-
-    # theft_vs_total = theft_counts.join(total_counts, on="location_description", how="inner")
-
-
-    # write_to_mysql(theft_vs_total, "theft_by_location", spark)
-#-------------------------------------------------------------------------------------
-
-
-
-#NEW theft_by_location --omit if neccesary
-#-------------------------------------------------------------------------------------
-
 
     df_location = (
         df
@@ -288,11 +197,6 @@ def main():
 
     write_to_mysql(theft_vs_total, "theft_by_location", spark)
 
-
-#-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
-
-    # Read holidays from MySQL holidays table
     holidays_df = spark.read \
         .format("jdbc") \
         .option("url", JDBC_URL) \
@@ -314,11 +218,9 @@ def main():
     yearly_crimes = df.groupBy("year").agg(count("*").alias("total_crimes")).orderBy("year")
     write_to_mysql(yearly_crimes, "yearly_crimes", spark)
 
-#------------------------------------------------------------------------------------------------
-# Omit keywords that are ambigous locations and put them in groupings. So you dont have 10 rows of 'Aparments' etc. 
+
     keywords = "(?i).*(FISTS|MOTOR VEHICLE|SCOOTER|NON-VEH|NON-MOTOR VEHICLE|NEW STAND).*"
 
-    #create buckets
     df_location = df.filter(
     col("location_description").isNotNull() & 
     (col("location_description") != "") &
@@ -340,13 +242,11 @@ def main():
     .otherwise("Other")
     )
 
-    #higest crime rate across locations
     crimes_by_location = df_location.groupBy("location_category") \
     .agg(count("*").alias("total_crimes")) \
     .orderBy(col("total_crimes").desc())
     write_to_mysql(crimes_by_location, "crimes_by_location", spark)
 
-    #most common crime per location 
     crimes_by_location_and_type = df_location.groupBy("location_category", "primary_type") \
     .agg(count("*").alias("total"))
 
@@ -361,8 +261,6 @@ def main():
     top_crime_per_category = ranked.filter(col("rank") == 1).drop("rank")
     write_to_mysql(top_crime_per_category, "crimes_by_location_and_type", spark)
     
-#------------------------------------------------------------------------------------------------
-
     location_type_counts = df_location.groupBy("location_description", "primary_type").agg(count("*").alias("total"))
     location_totals = df_location.groupBy("location_description").agg(count("*").alias("location_total"))
     location_totals_filtered = location_totals.filter(col("location_total") > 100)
@@ -374,7 +272,6 @@ def main():
     community_area_crimes = df_community.groupBy("community_area").agg(count("*").alias("total_crimes")).orderBy(col("total_crimes").desc())
     write_to_mysql(community_area_crimes, "community_area_crimes", spark)
 
-    # Downtown areas have higher rates of theft and robbery than residential areas.
     df_area = df.filter(col("community_area").isNotNull() & (col("community_area") != ""))
 
     downtown_ids = [32, 8, 33, 28]
@@ -403,22 +300,6 @@ def main():
 
     write_to_mysql(downtown_vs_residential, "downtown_vs_residential_theft_robbery", spark)
 
-    # Public transit locations (train stations, buses) have higher robbery rates than commercial areas. (Jade)
-     # 1)filter out rows with invalid columns 
-    # df_robbery = df.filter((col("primary_type") == "ROBBERY") & col("location_description").isNotNull())
-
-    # # 2) group data into buckets: public transit and commercial areas
-    # robberies_categorized = df_robbery.withColumn(
-    # "location_type",
-    # when(col("location_description").rlike(r"(?i)(TRAIN|BUS|TRANSIT|STATION)"), "Public Transit")
-    # .when(col("location_description").rlike(r"(?i)(COMMERCIAL|STORE|SHOP|MARKET)"), "Commercial")
-    # .otherwise("Other"))
-
-    # # 3) make comparison
-    # robbery_by_location = robberies_categorized.groupBy("location_type").agg(count("*").alias("robbery_count"))
-
-    # #4) automateically create relation in schema.sql for sql
-    # write_to_mysql(robbery_by_location, "transit_vs_commercial_robbery_count", spark)
     df_loc = df.filter(col("location_description").isNotNull())
 
    
@@ -441,10 +322,6 @@ def main():
 
     write_to_mysql(robbery_by_location, "transit_vs_commercial_robbery_count", spark)
 
-
-    # More theft incidents occur around airports compared to other areas.
-
-    #1) Filter and categorize ALL crimes (not just theft) by location type
     df_loc_categorized = df.filter(col("location_description").isNotNull()).withColumn(
         "location_type", 
         when(col("location_description").rlike(r"(?i)AIR(PORT|CRAFT)"), "Airport")
@@ -454,20 +331,16 @@ def main():
         .otherwise("Uncategorized")
     )
 
-    #2) Count THEFT crimes by location type
     theft_counts = df_loc_categorized.filter(col("primary_type") == "THEFT") \
         .groupBy("location_type") \
         .agg(count("*").alias("theft_count"))
 
-    #3) Count TOTAL crimes by location type
     total_crimes = df_loc_categorized.groupBy("location_type") \
         .agg(count("*").alias("total_crimes"))
 
-    #4) Join and calculate theft rate
     theft_comparison = theft_counts.join(total_crimes, "location_type") \
         .withColumn("theft_rate", col("theft_count") / col("total_crimes"))
 
-    #5) Write to MySQL
     write_to_mysql(theft_comparison, "airport_theft_count_comparison", spark)
     
     elapsed = time.time() - start_total
