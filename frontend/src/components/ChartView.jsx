@@ -555,7 +555,7 @@ if (table === 'season_crimes') {
           <BarChart
             layout="vertical"   
             data={rows}
-            margin={{ top: 10, right: 10, left: 120, bottom: 10 }} 
+            margin={{ top: 10, right: 10, left: 40, bottom: 10 }}  
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
