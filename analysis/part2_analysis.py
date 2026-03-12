@@ -105,7 +105,6 @@ def main():
                                         .agg(count("*").alias("total"))
 
     write_to_mysql(christmas_distribution, "christmas_vs_nonchristmas_by_type", spark)
-   
 
     halloween = df.filter((col("month") == 10) & (col("day") == 31)).groupBy("primary_type").agg(count("*").alias("total")).orderBy(col("total").desc())
     write_to_mysql(halloween, "halloween_by_type", spark)
