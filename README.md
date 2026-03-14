@@ -56,9 +56,11 @@ Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded 
  	in frontend: npm run dev\
  	(click open browser)
 
-### Snapshot: 
+### Snapshot:
+
 Workflow of files\
-clean_chicago_data/test.py -> analysis/part2_analysis.py -> analysis/schema.sql -> backend/app.py -> frontend/tables.js ; etc \
+
+clean_chicago_data/test.py -> analysis/part2_analysis.py -> analysis/schema.sql -> backend/app.py -> frontend/tables.js ; etc 
 
 # Demo
 <add_video_of_running_website> 
