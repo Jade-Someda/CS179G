@@ -1,5 +1,5 @@
 # Senior Design Project - Chicago Crime Analysis and Prediction
-This project focuses on Big Data Analysis. This project runs pre-analysis/cleans data, analyzes data, loads the data into a MySQL Databse and presents it on a Web Interface that uses an LLM Chatbot to infer insights about the data, based on predefined hypothesis. This analyze a Chicago Crime Datasest of 14 million cases. 
+This project focuses on Big Data Analysis. This project runs pre-analysis/cleans data, analyzes data, loads the data into a MySQL Databse and presents it on a Web Interface that uses an LLM Chatbot to infer insights about the data, based on predefined hypothesis. This analyzed a Chicago Crime Datasest of 14 million cases. 
 
 # Contributors:
 ### Neha Gutapalli
