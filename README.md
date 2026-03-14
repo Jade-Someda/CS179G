@@ -58,7 +58,7 @@ Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded 
 
 ### Snapshot:
 
-Workflow of files\
+Workflow of files \
 
 clean_chicago_data/test.py -> analysis/part2_analysis.py -> analysis/schema.sql -> backend/app.py -> frontend/tables.js ; etc 
 
