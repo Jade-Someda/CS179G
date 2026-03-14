@@ -5,12 +5,12 @@ This project focuses on Big Data Analysis. This project runs pre-analysis/cleans
 ## Neha Gutapalli || Tanya Carillo || Eric Via || Arleen Kaur || Jade Someda
 
 # Software Architecture: 
-       Apache Spark (PySpark) for distributed processing on cluster environment (class-142.cs.ucr.edu)
-       MySQL for aggregated results for further analysis and queries
-       Spark JDBC Connector to write processed Spark DataFrames into MySQL tables efficiently
-       Flask REST API provides the data from the MySQL database
-       Vite build tool used to help in creating the React.js single page web application
-       Web uses 3-tier architecture with database, backend, and frontend
+* Apache Spark (PySpark) for distributed processing on cluster environment (class-142.cs.ucr.edu)
+* MySQL for aggregated results for further analysis and queries
+* Spark JDBC Connector to write processed Spark DataFrames into MySQL tables efficiently
+* Flask REST API provides the data from the MySQL database
+* Vite build tool used to help in creating the React.js single page web application
+* Web uses 3-tier architecture with database, backend, and frontend
 
 # Implemnetation: 
 Main Data Structure: Dictionaries/Nested Dictionary
@@ -27,11 +27,9 @@ Dictionary
 |__sub-dictionary
        |__questions/hypotheses
 
-
-
-
-# Application
-By exploring this data, insightful inferences can generated in order to better understand how to mitigate crime and provide helpful solutions. By identifying patterns predictions can be created.
+# The Pipeline: 
+Pipeline Process for Web Interface: 
+Raw Data → Pre-Processed/Clean Data on Pyspark → Data is Analyzed/Aggregated on PySpark → Data is formatted and loaded in MySQL Database → Database Tables are Shown on Web Interface
 
 # The Workflow: (Cleaning Data --> Web Interface)
 Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded into MySQL Database → Database Tables on Webpage 
@@ -54,4 +52,8 @@ Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded 
  	in frontend: npm run dev
  	(click open browser)
 
+
+
+# Application
+By exploring this data, insightful inferences can generated in order to better understand how to mitigate crime and provide helpful solutions. By identifying patterns predictions can be created.
 
