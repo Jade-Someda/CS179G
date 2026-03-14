@@ -57,7 +57,8 @@ Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded 
  	(click open browser)
 
 ### Snapshot: 
-clean_chicago_data/test.py -> analysis/part2_analysis.py -> analysis/schema.sql -> backend/app.py -> frontend/tables.js ; etc 
+Workflow of files
+       clean_chicago_data/test.py -> analysis/part2_analysis.py -> analysis/schema.sql -> backend/app.py -> frontend/tables.js ; etc 
 
 # Demo
 <add_video_of_running_website> 
