@@ -33,15 +33,15 @@ Visualized:
 # The Workflow: (Cleaning Data --> Web Interface)
 Overview: Raw Data → Pre-Process/Clean Data → Data Analysis → Data loaded into MySQL Database → Database Tables on Webpage 
 1) Clean Data:
-   spark-submit test.py
+       * spark-submit test.py
 
 2) Run Analysis and Generate SQL Tables in MySQL Database: 
- mysql -u root -D cs179g --socket=/home/cs179g/mysql/mysql.sock
- spark-submit --jars ~/libs/mysql-connector-j-9.4.0.jar part2_analysis.py
+       *  mysql -u root -D cs179g --socket=/home/cs179g/mysql/mysql.sock
+       *  spark-submit --jars ~/libs/mysql-connector-j-9.4.0.jar part2_analysis.py
 
 3) Run MySQL Database: 
- mysqld --user=cs179g --datadir=/home/cs179g/mysql/data --socket=/home/ cs179g/mysql/mysql
-.sock & mysql -u root -D cs179g --socket=/home/cs179g/mysql/mysql.sock
+        * mysqld --user=cs179g --datadir=/home/cs179g/mysql/data --socket=/home/ cs179g/mysql/mysql
+       .sock & mysql -u root -D cs179g --socket=/home/cs179g/mysql/mysql.sock
 
 5) Run  Webpage:
   cd project/CS179G/backend/ (terminal 1)
